@@ -12,17 +12,17 @@ async function startBot() {
     printQRInTerminal: !usePairingCode,
   })
 
-  if (usePairingCode && !lenwy.authState.creds.registered) {
-    try {
-      const phoneNumber = await question('☘️ Masukan Nomor Yang Diawali Dengan 62 :\n')
-      const code = await lenwy.requestPairingCode(phoneNumber.trim())
-      console.log(`🎁 Pairing Code : ${code}`)
-    } catch (err) {
-      console.error('Failed to get pairing code:', err)
-    }
-  }
-
   sock.ev.on("connection.update", (update) => {
+    if (usePairingCode && !sock.authState.creds.registered) {
+      try {
+        const phoneNumber = await question('☘️ Masukan Nomor Yang Diawali Dengan 62 :\n')
+        const code = await sock.requestPairingCode(phoneNumber.trim())
+        console.log(`🎁 Pairing Code : ${code}`)
+      } catch (err) {
+        console.error('Failed to get pairing code:', err)
+      }
+    }
+    
     const { connection, lastDisconnect } = update
     if (connection === "close") {
       const statusCode = (lastDisconnect?.error)?.output?.statusCode
@@ -76,6 +76,7 @@ async function getDataWithKey(restKey) {
 startBot()
 
 startBot()
+
 
 
 

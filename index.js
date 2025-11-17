@@ -1,40 +1,7 @@
-// const { DisconnectReason, useMultiFileAuthState } = require('baileys');
-// const makeWASocket = require('baileys').default
-
-// const startSoct = () => {
-//   const { state, saveState } = useMultiFileAuthState('./auth.json')
-//   const sock = makeWASocket({
-//     printQRInTerminal: true,
-//     auth: state
-//   })
-
-//   sock.ev.on('connection.update', function (update, connection2) {
-//     let _a, _b
-//     let connection = update.connection, lastDisconnet = update.lastDisconnet
-//     if (connection == 'close') {
-//       if (((_b = (_a = lastDisconnet.error) === null
-//         || _a === void 0 ? void 0 : _a.output) === null
-//         || _b === void 0 ? void 0 : _b.statusCode) !== DisconnectReason.loggedOut) {
-//           startSoct()
-//         }
-       
-//     }
-//     else {
-//       console.log('connection close')
-//     }
-
-//     console.log("connection update ", update)
-//   })
-// }
-
-// =============================================================
-
-
-// install dulu: npm install @whiskeysockets/baileys
-// Pastikan sudah install: npm install @whiskeysockets/baileys
 import makeWASocket, { DisconnectReason, useMultiFileAuthState } from "@whiskeysockets/baileys"
 import fetch from "node-fetch" // jika Node.js < 18
 
+const usePairingCode = true
 let messageToSend = ""
 
 async function startBot() {
@@ -42,8 +9,18 @@ async function startBot() {
 
   const sock = makeWASocket({
     auth: state,
-    printQRInTerminal: true,
+    printQRInTerminal: !usePairingCode,
   })
+
+  if (usePairingCode && !lenwy.authState.creds.registered) {
+    try {
+      const phoneNumber = await question('☘️ Masukan Nomor Yang Diawali Dengan 62 :\n')
+      const code = await lenwy.requestPairingCode(phoneNumber.trim())
+      console.log(`🎁 Pairing Code : ${code}`)
+    } catch (err) {
+      console.error('Failed to get pairing code:', err)
+    }
+  }
 
   sock.ev.on("connection.update", (update) => {
     const { connection, lastDisconnect } = update
@@ -97,5 +74,8 @@ async function getDataWithKey(restKey) {
 }
 
 startBot()
+
+startBot()
+
 
 

@@ -1,7 +1,6 @@
 import makeWASocket, { DisconnectReason, useMultiFileAuthState } from "@whiskeysockets/baileys"
 import fetch from "node-fetch" // jika Node.js < 18
 
-const usePairingCode = true
 let messageToSend = ""
 
 async function startBot() {
@@ -9,19 +8,10 @@ async function startBot() {
 
   const sock = makeWASocket({
     auth: state,
-    printQRInTerminal: !usePairingCode,
+    printQRInTerminal: true,
   })
 
   sock.ev.on("connection.update", (update) => {
-    if (usePairingCode && !sock.authState.creds.registered) {
-      try {
-        const phoneNumber = await question('☘️ Masukan Nomor Yang Diawali Dengan 62 :\n')
-        const code = await sock.requestPairingCode(phoneNumber.trim())
-        console.log(`🎁 Pairing Code : ${code}`)
-      } catch (err) {
-        console.error('Failed to get pairing code:', err)
-      }
-    }
     
     const { connection, lastDisconnect } = update
     if (connection === "close") {
@@ -76,6 +66,7 @@ async function getDataWithKey(restKey) {
 startBot()
 
 startBot()
+
 
 
 

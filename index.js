@@ -1,30 +1,47 @@
-import makeWASocket, { DisconnectReason, useMultiFileAuthState } from "@whiskeysockets/baileys"
+const { makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion } = require("baileys")
+const pino = require("pino")
+const chalk = require("chalk")
+const readline = require("readline")
+const { resolve } = require("path")
+const { version } = require("os")
 import fetch from "node-fetch" // jika Node.js < 18
 
+const usePairingCode = true
 let messageToSend = ""
 
 async function startBot() {
-  const { state, saveCreds } = await useMultiFileAuthState("auth_info")
+  const { state, saveCreds } = await useMultiFileAuthState("./CahyaSesi")
+
+  const { version, isLatest } = await fetchLatestBaileysVersion()
+  console.log(`Cahya Using WA v${version.join('.')}, isLatest: ${isLatest}`)
 
   const sock = makeWASocket({
+    logger: pino({ level: "silent" }),
+    printQRInTerminal: !usePairingCode,
     auth: state,
-    printQRInTerminal: true,
+    browser: ['Ubuntu', 'Chrome', '20.0.04'],
+    version: version,
+    syncFullHistory: true,
+    generateHighQualityLinkPreview: true,
   })
 
+  if (usePairingCode && !sock.authState.creds.registered) {
+    try {
+      const phoneNumber = await question('☘️ Masukan Nomor Yang Diawali Dengan 62 :\n')
+      const code = await sock.requestPairingCode(phoneNumber.trim())
+      console.log(`🎁 Pairing Code : ${code}`)
+    } catch (err) {
+      console.error('Failed to get pairing code:', err)
+    }
+  }
+
   sock.ev.on("connection.update", (update) => {
-    
     const { connection, lastDisconnect } = update
-    if (connection === "close") {
-      const statusCode = (lastDisconnect?.error)?.output?.statusCode
-      const shouldReconnect = statusCode !== DisconnectReason.loggedOut
-      if (shouldReconnect) {
-        console.log("Koneksi terputus, mencoba reconnect...")
-        startBot()
-      } else {
-        console.log("Logout dari WhatsApp, tidak reconnect otomatis.")
-      }
-    } else if (connection === "open") {
-      console.log("Bot sudah terhubung!")
+    if ( connection === "close") {
+        console.log(chalk.red("❌  Koneksi Terputus, Mencoba Menyambung Ulang"))
+        connectToWhatsApp()
+    } else if ( connection === "open") {
+        console.log(chalk.green("✔  Bot Berhasil Terhubung Ke WhatsApp"))
     }
   })
 
@@ -64,10 +81,3 @@ async function getDataWithKey(restKey) {
 }
 
 startBot()
-
-startBot()
-
-
-
-
-
